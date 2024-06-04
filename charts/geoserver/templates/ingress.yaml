@@ -1,12 +1,12 @@
 {{- if .Values.ingress.enabled }}
-apiVersion: extensions/v1
+{{- $servicePathType := .Values.service.pathType | default "ImplementationSpecific" -}}
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   annotations:
     {{- with .Values.ingress.annotations }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
-  generation: 1
   labels:
     app: {{ template "geoserver.fullname" . }}
     chart: {{ template "geoserver.chart" . }}
@@ -22,10 +22,13 @@ spec:
   - host: {{ .Values.ingress.host }}
     http:
       paths:
-      - backend:
-          serviceName: {{ template "geoserver.fullname" . }}
-          servicePort: 80
-        path: /geoserver
+        - path: /geoserver
+          pathType: Prefix
+          backend:
+            service:
+              name: geoserver
+              port:
+                number: 8080
   {{- if .Values.ingress.tls.enabled }}
   tls:
     - hosts:
